@@ -21,7 +21,7 @@ public class ProcessingJob(IDocumentStore store, IDocumentWorkerFactory workerFa
                 logger.LogError(ex, "❌ Error en el job");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         }
 
         logger.LogInformation("⏹️ ProcessingJob detenido");
@@ -32,7 +32,7 @@ public class ProcessingJob(IDocumentStore store, IDocumentWorkerFactory workerFa
         using var session = store.OpenAsyncSession();
 
         var pendientes = await session.Query<ReceivedMessage>()
-            .Take(10)
+            .Take(100)
             .ToListAsync(stoppingToken);
 
         logger.LogInformation("🔍 Ciclo de procesamiento: {Count} mensajes encontrados", pendientes.Count);
