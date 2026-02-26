@@ -4,5 +4,5 @@ namespace Producer.Repository;
 
 public interface IMessageRepository
 {
-    Task SaveMessageAsync(ReceivedMessage message);
+    Task SaveReceivedMessageAsync(ReceivedMessage message);
 }

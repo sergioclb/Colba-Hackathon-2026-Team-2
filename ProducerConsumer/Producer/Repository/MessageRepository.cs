@@ -3,18 +3,11 @@ using Raven.Client.Documents;
 
 namespace Producer.Repository;
 
-public class MessageRepository : IMessageRepository
+public class MessageRepository(IDocumentStore store) : IMessageRepository
 {
-    private readonly IDocumentStore _store;
-
-    public MessageRepository(IDocumentStore store)
+    public async Task SaveReceivedMessageAsync(ReceivedMessage message)
     {
-        _store = store;
-    }
-
-    public async Task SaveMessageAsync(ReceivedMessage message)
-    {
-        using var session = _store.OpenAsyncSession();
+        using var session = store.OpenAsyncSession();
         await session.StoreAsync(message);
         await session.SaveChangesAsync();
     }

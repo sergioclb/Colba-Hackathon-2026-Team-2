@@ -1,37 +1,28 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace Consumer.Controllers
+namespace Consumer.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class ConsumerController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ConsumerController : ControllerBase
+    private static readonly Random Random = new();
+    private const int ErrorThreshold = 95;
+    private const string EmptyPayloadMessage = "Payload cannot be null or empty.";
+
+    [HttpPost]
+    public IActionResult ReceiveMessage([FromBody] string? request)
     {
-        [HttpPost]
-        public IActionResult ReceiveMessage([FromBody]string request)
+        if (string.IsNullOrWhiteSpace(request))
         {
-            if (request == null)
-                return BadRequest("Payload cannot be null.");
-
-            if (string.IsNullOrWhiteSpace(request))
-                return BadRequest("Payload cannot be empty.");
-
-            if (!IsValidFormat(request))
-                return BadRequest("Invalid payload format.");
-
-            return Ok(new
-            {
-                Status = "Message received successfully"
-            });
+            return BadRequest(EmptyPayloadMessage);
         }
 
-        private bool IsValidFormat(string payload)
+        if (Random.Next(1, 100) > ErrorThreshold)
         {
-            return payload.Length >= 3;
+            return BadRequest();
         }
-    }
 
-    public class MessageRequest
-    {
-        public string Payload { get; set; }
+        return Ok();
     }
 }

@@ -2,6 +2,9 @@ using Producer.Repository;
 using Producer.Service;
 using Producer.Worker;
 using Raven.Client.Documents;
+using Raven.Client.Exceptions;
+using Raven.Client.ServerWide;
+using Raven.Client.ServerWide.Operations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,21 +15,34 @@ builder.Services.AddScoped<IMessageService, MessageServiceImp>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<IDocumentStore>(_ =>
-{
-    var store = new DocumentStore
-    {
-        Urls = new[] { Environment.GetEnvironmentVariable("RAVEN_URL") ?? "http://localhost:8080" },
-        Database = Environment.GetEnvironmentVariable("RAVEN_DATABASE") ?? "Hackaton"
-    };
-    store.Initialize();
-    return store;
-});
-
 builder.Services.AddHttpClient();
 builder.Services.AddTransient<IDocumentWorker, DocumentWorker>();
 builder.Services.AddSingleton<IDocumentWorkerFactory, DocumentWorkerFactory>();
 builder.Services.AddHostedService<ProcessingJob>();
+builder.Services.AddSingleton<IDocumentStore>(_ =>
+{
+    var storeUrl = Environment.GetEnvironmentVariable("RAVEN_URL") ?? "http://localhost:8080";
+    var databaseName = Environment.GetEnvironmentVariable("RAVEN_DATABASE") ?? "Hackathon";
+    
+    var store = new DocumentStore
+    {
+        Urls = [storeUrl],
+        Database = databaseName
+    };
+    
+    store.Initialize();
+    // Create the database if it doesn't exist
+    try
+    {
+        store.Maintenance.Server.Send(new CreateDatabaseOperation(new DatabaseRecord(databaseName)));
+    }
+    catch (ConcurrencyException)
+    {
+        // Already exists database
+    }
+    
+    return store;
+});
 
 var app = builder.Build();
 

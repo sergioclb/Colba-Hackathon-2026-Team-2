@@ -3,16 +3,9 @@ using Producer.Repository;
 
 namespace Producer.Service;
 
-public class MessageServiceImp: IMessageService
+public class MessageServiceImp(IMessageRepository repository) : IMessageService
 {
-    private readonly IMessageRepository _repository;
-
-    public MessageServiceImp(IMessageRepository repository)
-    {
-        _repository = repository;
-    }
-
-    public async Task<ReceivedMessage> ProcessMessageAsync(string payload, string destinationUrl)
+    public async Task<bool> ProcessMessageAsync(string payload, string destinationUrl)
     {
         var message = new ReceivedMessage
         {
@@ -22,8 +15,15 @@ public class MessageServiceImp: IMessageService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _repository.SaveMessageAsync(message);
-
-        return message;
+        try
+        {
+            await repository.SaveReceivedMessageAsync(message);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+        
+        return true;
     }
 }
