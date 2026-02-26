@@ -8,6 +8,11 @@
 
     <ItemGroup>
       <PackageReference Include="RavenDB.Client" Version="6.2.13" />
+      <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+      
     </ItemGroup>
 
 </Project>
