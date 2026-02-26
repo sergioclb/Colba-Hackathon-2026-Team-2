@@ -8,6 +8,8 @@ public class ProcessingJob(IDocumentStore store, IDocumentWorkerFactory workerFa
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        logger.LogInformation("✅ ProcessingJob iniciado");
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -16,30 +18,31 @@ public class ProcessingJob(IDocumentStore store, IDocumentWorkerFactory workerFa
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error en el job");
+                logger.LogError(ex, "❌ Error en el job");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
         }
+
+        logger.LogInformation("⏹️ ProcessingJob detenido");
     }
 
     private async Task ProcessPendingMessages(CancellationToken stoppingToken)
     {
         using var session = store.OpenAsyncSession();
 
-        var pendingMessages = await session.Query<ReceivedMessage>()
+        var pendientes = await session.Query<ReceivedMessage>()
             .Take(10)
             .ToListAsync(stoppingToken);
 
-        if (pendingMessages.Count == 0)
+        logger.LogInformation("🔍 Ciclo de procesamiento: {Count} mensajes encontrados", pendientes.Count);
+
+        if (pendientes.Count == 0)
         {
-            logger.LogDebug("No hay mensajes pendientes");
             return;
         }
 
-        logger.LogInformation("Procesando {Count} mensajes", pendingMessages.Count);
-
-        await Parallel.ForEachAsync(pendingMessages, new ParallelOptions
+        await Parallel.ForEachAsync(pendientes, new ParallelOptions
         {
             MaxDegreeOfParallelism = 4,
             CancellationToken = stoppingToken
