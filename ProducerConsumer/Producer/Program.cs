@@ -15,6 +15,10 @@ builder.Services.AddScoped<IMessageService, MessageServiceImp>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
+builder.Services.AddTransient<IDocumentWorker, DocumentWorker>();
+builder.Services.AddSingleton<IDocumentWorkerFactory, DocumentWorkerFactory>();
+builder.Services.AddHostedService<ProcessingJob>();
 builder.Services.AddSingleton<IDocumentStore>(_ =>
 {
     var storeUrl = Environment.GetEnvironmentVariable("RAVEN_URL") ?? "http://localhost:8080";
@@ -27,23 +31,18 @@ builder.Services.AddSingleton<IDocumentStore>(_ =>
     };
     
     store.Initialize();
-    // Crea la base de datos si no existe
+    // Create the database if it doesn't exist
     try
     {
         store.Maintenance.Server.Send(new CreateDatabaseOperation(new DatabaseRecord(databaseName)));
     }
     catch (ConcurrencyException)
     {
-        // La base de datos ya existe, ignoramos
+        // Already exists database
     }
     
     return store;
 });
-
-builder.Services.AddHttpClient();
-builder.Services.AddTransient<IDocumentWorker, DocumentWorker>();
-builder.Services.AddSingleton<IDocumentWorkerFactory, DocumentWorkerFactory>();
-builder.Services.AddHostedService<ProcessingJob>();
 
 var app = builder.Build();
 
