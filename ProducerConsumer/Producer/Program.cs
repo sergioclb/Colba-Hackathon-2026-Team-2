@@ -12,8 +12,8 @@ builder.Services.AddSingleton<IDocumentStore>(_ =>
 {
     var store = new DocumentStore
     {
-        Urls = ["http://localhost:8080"],
-        Database = "Hackaton"
+        Urls = new[] { Environment.GetEnvironmentVariable("RAVEN_URL") ?? "http://ravendb:8080" },
+        Database = Environment.GetEnvironmentVariable("RAVEN_DATABASE") ?? "Hackathon"
     };
     store.Initialize();
     return store;
