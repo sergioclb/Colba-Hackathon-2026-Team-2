@@ -19,6 +19,7 @@ public class ProducerController(IDocumentStore store) : ControllerBase
 
         var message = new ReceivedMessage
         {
+            Id = Guid.NewGuid().ToString(),
             Payload = payload,
             DestinationUrl = destinationUrl,
             CreatedAt = DateTime.UtcNow
@@ -27,6 +28,7 @@ public class ProducerController(IDocumentStore store) : ControllerBase
         var session = store.OpenAsyncSession();
 
         await session.StoreAsync(message);
+        await session.SaveChangesAsync();
 
         return Ok();
     }

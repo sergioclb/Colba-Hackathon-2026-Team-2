@@ -8,7 +8,7 @@ public static class MappingExtensions
     {
         return new ProcessingMessage
         {
-            Id = message.Id,
+            Id = Guid.NewGuid().ToString(),
             DestinationUrl = message.DestinationUrl,
             Payload = message.Payload,
             StartedAt = DateTime.UtcNow
