@@ -6,4 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="RavenDB.Client" Version="6.2.13" />
+    </ItemGroup>
+
 </Project>
