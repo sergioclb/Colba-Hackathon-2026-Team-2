@@ -1,0 +1,47 @@
+services:
+  ravendb:
+    image: ravendb/ravendb:latest
+    container_name: ravendb
+    environment:
+      - RAVEN_Setup_Mode=None
+      - RAVEN_License_Eula_Accepted=true
+      - RAVEN_Security_UnsecuredAccessAllowed=PrivateNetwork
+      - RAVEN_Integrations_PostgreSQL_Enabled=false
+      - RAVEN_Features_Availability=Experimental
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./RavenData:/var/lib/ravendb/data
+    restart: unless-stopped
+
+  producer:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    container_name: producer
+    working_dir: /src
+    volumes:
+      - ./Producer:/src
+    command: dotnet watch run --urls=http://+:5095
+    environment:
+      - RAVEN_URL=http://ravendb:8080
+      - RAVEN_DATABASE=Hackathon
+    ports:
+      - "5095:5095"
+    restart: unless-stopped
+    depends_on:
+      - ravendb
+
+  consumer:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    container_name: consumer
+    working_dir: /src
+    volumes:
+      - ./Consumer:/src
+    command: dotnet watch run --urls=http://+:5188
+    ports:
+      - "5188:5188"
+    restart: unless-stopped
+    depends_on:
+      - ravendb
+
+volumes:
+  ravendb_data:
