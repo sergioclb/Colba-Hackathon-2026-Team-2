@@ -1,3 +1,4 @@
+using Producer.Worker;
 using Raven.Client.Documents;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,11 @@ builder.Services.AddSingleton<IDocumentStore>(_ =>
     store.Initialize();
     return store;
 });
+
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IDocumentWorker, DocumentWorker>();
+builder.Services.AddSingleton<IDocumentWorkerFactory, DocumentWorkerFactory>();
+builder.Services.AddHostedService<ProcessingJob>();
 
 var app = builder.Build();
 

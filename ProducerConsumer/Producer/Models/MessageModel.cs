@@ -1,5 +1,3 @@
-using System;
-
 namespace Producer.Models
 {
     public class ReceivedMessage
