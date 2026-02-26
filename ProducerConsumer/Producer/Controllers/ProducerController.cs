@@ -1,24 +1,33 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Producer.Models;
+using Raven.Client.Documents;
 
 namespace Producer.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ProducerController : ControllerBase
+public class ProducerController(IDocumentStore store) : ControllerBase
 {
+    
     [HttpPost]
-    public IActionResult GetMessage(string payload, string url)
+    public async Task<IActionResult> GetMessage(
+        [FromForm] string payload,
+        [FromForm] string destinationUrl)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+        if (string.IsNullOrEmpty(payload) || string.IsNullOrEmpty(destinationUrl))
+            return BadRequest("Faltan parámetros");
 
-        return Ok(new
+        var message = new ReceivedMessage
         {
-            mensaje = "Datos recibidos correctamente",
-            payloadRecibido = payload,
-            urlRecibida = url
-        });
+            Payload = payload,
+            DestinationUrl = destinationUrl,
+            CreatedAt = DateTime.UtcNow
+        };
+        
+        var session = store.OpenAsyncSession();
+
+        await session.StoreAsync(message);
+
+        return Ok();
     }
 }
