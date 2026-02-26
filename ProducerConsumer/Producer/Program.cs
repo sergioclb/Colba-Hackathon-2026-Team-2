@@ -20,7 +20,7 @@ builder.Services.AddSingleton<IDocumentStore>(_ =>
 });
 
 builder.Services.AddHttpClient();
-builder.Services.AddScoped<IDocumentWorker, DocumentWorker>();
+builder.Services.AddTransient<IDocumentWorker, DocumentWorker>();
 builder.Services.AddSingleton<IDocumentWorkerFactory, DocumentWorkerFactory>();
 builder.Services.AddHostedService<ProcessingJob>();
 

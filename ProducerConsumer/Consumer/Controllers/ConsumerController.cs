@@ -1,21 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace Consumer.Api.Controllers
+namespace Consumer.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class ConsumerController : ControllerBase
     {
         [HttpPost]
-        public IActionResult ReceiveMessage([FromBody] MessageRequest request)
+        public IActionResult ReceiveMessage([FromBody]string request)
         {
             if (request == null)
                 return BadRequest("Payload cannot be null.");
 
-            if (string.IsNullOrWhiteSpace(request.Payload))
+            if (string.IsNullOrWhiteSpace(request))
                 return BadRequest("Payload cannot be empty.");
 
-            if (!IsValidFormat(request.Payload))
+            if (!IsValidFormat(request))
                 return BadRequest("Invalid payload format.");
 
             return Ok(new

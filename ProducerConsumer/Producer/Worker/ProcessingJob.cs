@@ -21,7 +21,7 @@ public class ProcessingJob(IDocumentStore store, IDocumentWorkerFactory workerFa
                 logger.LogError(ex, "❌ Error en el job");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
         }
 
         logger.LogInformation("⏹️ ProcessingJob detenido");
@@ -49,7 +49,7 @@ public class ProcessingJob(IDocumentStore store, IDocumentWorkerFactory workerFa
         }, async (message, ct) =>
         {
             var worker = workerFactory.Create();
-            await worker.ProcessAsync(message, ct);
+            await worker.ProcessAsync(message.Id, ct);
         });
     }
 }
