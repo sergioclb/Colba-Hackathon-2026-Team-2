@@ -9,7 +9,7 @@ namespace Producer.Controllers;
 public class ProducerController(IMessageService service) : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> PostMessage([FromBody] CreateMessageRequest request)
+    public async Task<IActionResult> StoreRequest([FromBody] CreateMessageRequest request)
     {
         {
             if (string.IsNullOrEmpty(request.Payload) || string.IsNullOrEmpty(request.Url))

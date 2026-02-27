@@ -8,7 +8,7 @@ public class ProcessingJob(IDocumentStore store, IDocumentWorkerFactory workerFa
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        logger.LogInformation("✅ ProcessingJob iniciado");
+        logger.LogInformation("ProcessingJob started");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -18,38 +18,39 @@ public class ProcessingJob(IDocumentStore store, IDocumentWorkerFactory workerFa
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "❌ Error en el job");
+                logger.LogError(ex, "Error in ProcessPendingMessages");
             }
 
             await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         }
 
-        logger.LogInformation("⏹️ ProcessingJob detenido");
+        logger.LogInformation("ProcessingJob stopped");
     }
 
     private async Task ProcessPendingMessages(CancellationToken stoppingToken)
     {
         using var session = store.OpenAsyncSession();
 
-        var pendientes = await session.Query<ReceivedMessage>()
+        var pendingMessages = await session.Query<ReceivedMessage>()
             .Take(100)
+            .OrderBy(x => x.CreatedAt)
             .ToListAsync(stoppingToken);
 
-        logger.LogInformation("🔍 Ciclo de procesamiento: {Count} mensajes encontrados", pendientes.Count);
+        logger.LogInformation("{Count} received messages pending to be processed", pendingMessages.Count);
 
-        if (pendientes.Count == 0)
+        if (pendingMessages.Count is 0)
         {
             return;
         }
 
-        await Parallel.ForEachAsync(pendientes, new ParallelOptions
+        await Parallel.ForEachAsync(pendingMessages, new ParallelOptions
         {
-            MaxDegreeOfParallelism = 4,
+            MaxDegreeOfParallelism = 10,
             CancellationToken = stoppingToken
         }, async (message, ct) =>
         {
             var worker = workerFactory.Create();
-            await worker.ProcessAsync(message.Id, ct);
+            await worker.ProcessAsync(message.Id!, ct);
         });
     }
 }
