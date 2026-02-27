@@ -1,2 +1,5 @@
 # Raven
 RavenData/
+ProducerConsumer/.idea
+ProducerConsumer/telemetry/tempo/data/traces
+ProducerConsumer/telemetry/tempo/data
