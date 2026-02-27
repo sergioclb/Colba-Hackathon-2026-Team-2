@@ -7,7 +7,7 @@ namespace Consumer.Controllers;
 public class ConsumerController : ControllerBase
 {
     private static readonly Random Random = new();
-    private const int ErrorThreshold = 95;
+    private const int ErrorThreshold = 75;
     private const string EmptyPayloadMessage = "Payload cannot be null or empty.";
 
     [HttpPost]

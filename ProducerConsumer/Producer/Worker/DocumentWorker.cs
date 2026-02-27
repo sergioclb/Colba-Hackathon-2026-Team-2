@@ -15,27 +15,27 @@ public class DocumentWorker(IDocumentStore store, IHttpClientFactory httpClientF
     public async Task ProcessAsync(string messageId, CancellationToken ct)
     {
         using var session = store.OpenAsyncSession();
-
+        var processingMessage = new ProcessingMessage(); 
         try
         {
-            // 1. Cargar el mensaje desde esta sesión
+            // Load Received message
             var message = await session.LoadAsync<ReceivedMessage>(messageId, ct);
             
-            if (message == null)
+            if (message is null)
             {
-                logger.LogWarning("Mensaje {Id} no encontrado", messageId);
+                logger.LogWarning("Message with id: {Id} not found", messageId);
                 return;
             }
 
-            // 2. Convertir a ProcessingMessage
-            var processingMessage = message.ToProcessingMessage();
+            // Create the ProcessingMessage
+            processingMessage = message.ToProcessingMessage();
             await session.StoreAsync(processingMessage, ct);
             
-            // 3. Eliminar ReceivedMessage (ahora está en esta sesión)
+            // Delete ReceivedMessage
             session.Delete(message);
             await session.SaveChangesAsync(ct);
 
-            // 4. Enviar a destino
+            // Do Post Request
             var client = httpClientFactory.CreateClient();
             var response = await client.PostAsJsonAsync(
                 message.DestinationUrl, 
@@ -44,7 +44,7 @@ public class DocumentWorker(IDocumentStore store, IHttpClientFactory httpClientF
             );
             response.EnsureSuccessStatusCode();
 
-            // 5. Marcar como procesado
+            // Flag as processed
             var processedMessage = new ProcessedMessage
             {
                 Id = message.Id,
@@ -56,28 +56,22 @@ public class DocumentWorker(IDocumentStore store, IHttpClientFactory httpClientF
             session.Delete(processingMessage.Id);
             await session.SaveChangesAsync(ct);
 
-            logger.LogInformation("✅ Mensaje {Id} procesado correctamente", message.Id);
+            logger.LogInformation("Message with id: {Id} correctly processed", message.Id);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "❌ Error procesando mensaje {Id}", messageId);
-            
-            using var errorSession = store.OpenAsyncSession();
-            
-            var message = await errorSession.LoadAsync<ReceivedMessage>(messageId, ct);
-            if (message != null)
+            logger.LogError(ex, "Error while processing message with id: {Id}", messageId);
+
+            var errorMessage = new ErrorMessage
             {
-                var errorMessage = new ErrorMessage
-                {
-                    Id = message.Id,
-                    Payload = message.Payload,
-                    DestinationUrl = message.DestinationUrl
-                };
-                
-                await errorSession.StoreAsync(errorMessage, ct);
-                errorSession.Delete(message);
-                await errorSession.SaveChangesAsync(ct);
-            }
+                Id = Guid.NewGuid().ToString(),
+                Payload = processingMessage.Payload,
+                DestinationUrl = processingMessage.DestinationUrl
+            };
+            
+            await session.StoreAsync(errorMessage, ct);
+            session.Delete(processingMessage.Id);
+            await session.SaveChangesAsync(ct);
         }
     }
 }

@@ -29,6 +29,10 @@ namespace Producer.Models
         public string? Id { get; set; }
         public string? Payload { get; set; }
         public string? DestinationUrl { get; set; }
-        public DateTime FailedAt { get; set; } = DateTime.UtcNow;
+        public int RetryCount { get; set; }
+        public bool IsMarkedAsUnprocessable { get; set; } = false;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? LastRetryAt { get; set; }
+        public string? LastErrorMessage { get; set; }
     }
 }

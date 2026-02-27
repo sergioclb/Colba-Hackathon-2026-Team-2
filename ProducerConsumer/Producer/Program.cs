@@ -19,6 +19,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddTransient<IDocumentWorker, DocumentWorker>();
 builder.Services.AddSingleton<IDocumentWorkerFactory, DocumentWorkerFactory>();
 builder.Services.AddHostedService<ProcessingJob>();
+builder.Services.AddHostedService<ErrorMessageReprocessingJob>();
 builder.Services.AddSingleton<IDocumentStore>(_ =>
 {
     var storeUrl = Environment.GetEnvironmentVariable("RAVEN_URL") ?? "http://localhost:8080";
