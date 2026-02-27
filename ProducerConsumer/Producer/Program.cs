@@ -70,6 +70,7 @@ builder.Services.AddHostedService<ProcessingJob>();
 // ----------------------
 // RavenDB setup
 // ----------------------
+builder.Services.AddHostedService<ErrorMessageReprocessingJob>();
 builder.Services.AddSingleton<IDocumentStore>(_ =>
 {
     var storeUrl = Environment.GetEnvironmentVariable("RAVEN_URL") ?? "http://localhost:8080";
